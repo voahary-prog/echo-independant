@@ -6,11 +6,11 @@ interface HeaderProps {
 }
 
 const DEFAULT_RUBRIQUES = [
-  'Politique',
-  'Économie',
-  'Culture',
-  'International',
-  'Société',
+  'POLITIQUE',
+  'ÉCONOMIE',
+  'CULTURE',
+  'INTERNATIONAL',
+  'SOCIÉTÉ',
 ];
 
 export function Header({
@@ -26,9 +26,12 @@ export function Header({
     day: 'numeric',
   });
 
-  // Combiner les rubriques par défaut avec celles présentes en base de données
+  // Convertir toutes les catégories saisies en majuscules pour éviter les doublons
+  const formattedCategories = categories.map((c) => c.toUpperCase());
+
+  // Fusionner et dédupliquer
   const allRubriques = Array.from(
-    new Set([...DEFAULT_RUBRIQUES, ...categories])
+    new Set([...DEFAULT_RUBRIQUES, ...formattedCategories])
   );
 
   return (
@@ -57,10 +60,10 @@ export function Header({
         </button>
       </div>
 
-      {/* Barre de navigation / Rubriques */}
+      {/* Barre de navigation / Rubriques en MAJUSCULES */}
       <nav className="border-t border-stone-900 bg-stone-900 text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-6 overflow-x-auto px-4 py-3 text-xs font-bold uppercase tracking-widest sm:gap-8">
-          {/* Bouton Accueil / Une */}
+          {/* Bouton UNE */}
           <button
             type="button"
             onClick={(e) => {
@@ -72,10 +75,10 @@ export function Header({
               !selectedCategory ? 'text-red-500 underline underline-offset-4' : 'text-stone-300'
             }`}
           >
-            Une
+            UNE
           </button>
 
-          {/* Liste complète des rubriques */}
+          {/* Liste nettoyée des rubriques en majuscules */}
           {allRubriques.map((cat) => (
             <button
               key={cat}
@@ -85,7 +88,7 @@ export function Header({
                 if (onSelectCategory) onSelectCategory(cat);
               }}
               className={`transition-colors hover:text-red-400 ${
-                selectedCategory?.toLowerCase() === cat.toLowerCase()
+                selectedCategory?.toUpperCase() === cat
                   ? 'text-red-500 underline underline-offset-4'
                   : 'text-stone-300'
               }`}
