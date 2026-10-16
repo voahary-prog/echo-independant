@@ -29,7 +29,7 @@ interface AdminPageProps {
 const EMPTY_FORM = {
   titre: '',
   categorie: '',
-  chapeau: '',
+  chapo: '',
   auteur: '',
   image_url: '',
   contenu: '',
@@ -171,7 +171,7 @@ function Dashboard({
     setForm({
       titre: article.titre ?? '',
       categorie: article.categorie ?? '',
-      chapeau: article.chapeau ?? '',
+      chapo: article.chapo ?? '',
       auteur: article.auteur ?? '',
       image_url: article.image_url ?? '',
       contenu: article.contenu ?? '',
@@ -248,7 +248,7 @@ function Dashboard({
     const payload = {
       titre: form.titre,
       categorie: form.categorie,
-      chapeau: form.chapeau,
+      chapo: form.chapo,
       auteur: form.auteur,
       image_url: form.image_url,
       contenu: form.contenu,
@@ -583,17 +583,17 @@ function Dashboard({
                 )}
               </div>
 
-              {/* Chapeau */}
+              {/* Chapô */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                  Chapeau (Résumé / Accroche)
+                  Chapô (Résumé / Accroche)
                 </label>
                 <textarea
                   rows={3}
-                  value={form.chapeau}
-                  onChange={(e) => setForm({ ...form, chapeau: e.target.value })}
-                  className={`${inputClass} resize-y italic`}
-                  placeholder="Court résumé d'accroche qui apparaît au début de l'article…"
+                  value={form.chapo}
+                  onChange={(e) => setForm({ ...form, chapo: e.target.value })}
+                  className={`${inputClass} resize-y italic font-serif`}
+                  placeholder="Court résumé d'accroche qui précède le corps de l'article…"
                 />
               </div>
 
