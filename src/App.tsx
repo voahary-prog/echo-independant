@@ -4,11 +4,13 @@ import type { Article } from '@/types/article';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ArticleCard } from '@/components/ArticleCard';
+import { ArticleDetail } from '@/components/ArticleDetail';
 import { AdminPage } from '@/pages/AdminPage';
 import { Loader2 } from 'lucide-react';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'admin'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'article' | 'admin'>('home');
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,14 @@ export default function App() {
     fetchArticles();
   }, []);
 
+  const handleSelectArticle = (article: Article) => {
+    setSelectedArticle(article);
+    setCurrentView('article');
+    window.scrollTo(0, 0);
+  };
+
   const handleBackToHome = () => {
+    setSelectedArticle(null);
     setCurrentView('home');
     fetchArticles();
   };
@@ -50,13 +59,16 @@ export default function App() {
     );
   }
 
-  // Extraire les catégories uniques depuis les articles
+  // Récupérer la liste des catégories uniques
   const categories = Array.from(
     new Set(articles.map((a) => a.categorie).filter(Boolean))
   );
 
+  // Filtrage insensible à la casse
   const filteredArticles = selectedCategory
-    ? articles.filter((a) => a.categorie?.toLowerCase() === selectedCategory.toLowerCase())
+    ? articles.filter(
+        (a) => a.categorie?.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+      )
     : articles;
 
   const featuredArticle = filteredArticles[0];
@@ -67,55 +79,84 @@ export default function App() {
       <Header
         categories={categories}
         selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-        onHomeClick={handleBackToHome}
+        onSelectCategory={(cat) => {
+          setSelectedCategory(cat);
+          setCurrentView('home');
+        }}
+        onHomeClick={() => {
+          setSelectedCategory(null);
+          handleBackToHome();
+        }}
       />
 
       <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-stone-500">
-              <Loader2 className="mb-4 animate-spin text-red-900" size={32} />
-              <p className="text-sm font-medium">Chargement des éditions…</p>
-            </div>
-          ) : articles.length === 0 ? (
-            <div className="py-20 text-center text-stone-500">
-              <p className="font-serif text-xl">Aucun article publié pour le moment.</p>
-            </div>
-          ) : (
-            <>
-              {featuredArticle && (
-                <section className="mb-12 border-b border-stone-300 pb-12">
-                  <h2 className="mb-6 font-serif text-xs font-bold uppercase tracking-widest text-red-900">
-                    À la Une
-                  </h2>
-                  <ArticleCard
-                    article={featuredArticle}
-                    onClick={() => {}}
-                    featured
-                  />
-                </section>
-              )}
+        {currentView === 'article' && selectedArticle ? (
+          <ArticleDetail
+            article={selectedArticle}
+            relatedArticles={articles.filter(
+              (a) => a.id !== selectedArticle.id && a.categorie === selectedCategory
+            )}
+            onSelectArticle={handleSelectArticle}
+            onBack={handleBackToHome}
+          />
+        ) : (
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20 text-stone-500">
+                <Loader2 className="mb-4 animate-spin text-red-900" size={32} />
+                <p className="text-sm font-medium">Chargement des éditions…</p>
+              </div>
+            ) : filteredArticles.length === 0 ? (
+              <div className="py-20 text-center text-stone-500">
+                <p className="font-serif text-xl">
+                  {selectedCategory
+                    ? `Aucun article disponible dans la rubrique « ${selectedCategory} ».`
+                    : 'Aucun article publié pour le moment.'}
+                </p>
+                {selectedCategory && (
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="mt-4 text-xs font-bold uppercase tracking-widest text-red-900 underline"
+                  >
+                    Voir tous les articles
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                {featuredArticle && (
+                  <section className="mb-12 border-b border-stone-300 pb-12">
+                    <h2 className="mb-6 font-serif text-xs font-bold uppercase tracking-widest text-red-900">
+                      {selectedCategory ? `Rubrique ${selectedCategory}` : 'À la Une'}
+                    </h2>
+                    <ArticleCard
+                      article={featuredArticle}
+                      onClick={() => handleSelectArticle(featuredArticle)}
+                      featured
+                    />
+                  </section>
+                )}
 
-              {regularArticles.length > 0 && (
-                <section>
-                  <h2 className="mb-6 font-serif text-xs font-bold uppercase tracking-widest text-stone-500">
-                    Récents
-                  </h2>
-                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    {regularArticles.map((article) => (
-                      <ArticleCard
-                        key={article.id}
-                        article={article}
-                        onClick={() => {}}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-            </>
-          )}
-        </div>
+                {regularArticles.length > 0 && (
+                  <section>
+                    <h2 className="mb-6 font-serif text-xs font-bold uppercase tracking-widest text-stone-500">
+                      Récents
+                    </h2>
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                      {regularArticles.map((article) => (
+                        <ArticleCard
+                          key={article.id}
+                          article={article}
+                          onClick={() => handleSelectArticle(article)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </main>
 
       <Footer
