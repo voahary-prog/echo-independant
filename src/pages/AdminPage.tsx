@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   Lock,
   LogOut,
@@ -17,6 +17,8 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import type { Article } from '@/types/article';
 import { supabase } from '@/lib/supabase';
 
@@ -76,7 +78,7 @@ export function AdminPage({ onBackToSite }: AdminPageProps) {
   if (!authed) {
     return (
       <div
-        className={`flex min-h-screen flex-col items-center justify-center p-4 transition-colors duration-300 font-sans ${
+        className={`flex min-h-screen flex-col items-center justify-center p-4 font-sans transition-colors duration-300 ${
           isDark ? 'bg-neutral-950 text-white' : 'bg-stone-100 text-stone-900'
         }`}
       >
@@ -84,13 +86,17 @@ export function AdminPage({ onBackToSite }: AdminPageProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold border transition-all ${
+            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
               isDark
                 ? 'border-neutral-800 bg-neutral-900 text-neutral-300 hover:text-white'
                 : 'border-stone-300 bg-white text-stone-700 hover:bg-stone-50'
             }`}
           >
-            {isDark ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} className="text-stone-700" />}
+            {isDark ? (
+              <Sun size={14} className="text-amber-400" />
+            ) : (
+              <Moon size={14} className="text-stone-700" />
+            )}
             <span>{isDark ? 'Mode Clair' : 'Mode Sombre'}</span>
           </button>
         </div>
@@ -107,7 +113,11 @@ export function AdminPage({ onBackToSite }: AdminPageProps) {
               <Lock size={22} />
             </div>
             <h1 className="text-xl font-black tracking-tight">ESPACE RÉDACTION</h1>
-            <p className={`mt-1 text-xs ${isDark ? 'text-neutral-400' : 'text-stone-500'}`}>
+            <p
+              className={`mt-1 text-xs ${
+                isDark ? 'text-neutral-400' : 'text-stone-500'
+              }`}
+            >
               L'Écho Indépendant — Administration
             </p>
           </div>
@@ -153,7 +163,9 @@ export function AdminPage({ onBackToSite }: AdminPageProps) {
           <button
             onClick={onBackToSite}
             className={`mt-6 block w-full text-center text-xs font-semibold transition-colors ${
-              isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-stone-500 hover:text-stone-800'
+              isDark
+                ? 'text-neutral-500 hover:text-neutral-300'
+                : 'text-stone-500 hover:text-stone-800'
             }`}
           >
             ← Retour au site
@@ -189,7 +201,9 @@ function Dashboard({
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'form'>('list');
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [submitStatus, setSubmitStatus] = useState<
+    'idle' | 'loading' | 'success' | 'error'
+  >('idle');
   const [submitMessage, setSubmitMessage] = useState('');
 
   const [form, setForm] = useState(EMPTY_FORM);
@@ -198,6 +212,22 @@ function Dashboard({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isDark = theme === 'dark';
+
+  // Barre d'outils Quill avec option Justifier & Alignement
+  const quillModules = useMemo(
+    () => ({
+      toolbar: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ align: [] }],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['blockquote', 'code-block'],
+        ['link', 'image'],
+        ['clean'],
+      ],
+    }),
+    []
+  );
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -222,7 +252,10 @@ function Dashboard({
   const handleDelete = async (id: string | number) => {
     if (!confirm('Supprimer cet article définitivement ?')) return;
 
-    const { error: deleteError } = await supabase.from('articles').delete().eq('id', id);
+    const { error: deleteError } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', id);
 
     if (deleteError) {
       alert('Erreur lors de la suppression : ' + deleteError.message);
@@ -367,10 +400,10 @@ function Dashboard({
               L'ÉCHO <span className="text-red-600">INDÉPENDANT</span>
             </span>
             <span
-              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+              className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${
                 isDark
-                  ? 'bg-red-950/80 text-red-400 border-red-800/50'
-                  : 'bg-red-50 text-red-700 border-red-200'
+                  ? 'border-red-800/50 bg-red-950/80 text-red-400'
+                  : 'border-red-200 bg-red-50 text-red-700'
               }`}
             >
               Rédaction
@@ -402,7 +435,7 @@ function Dashboard({
 
             <button
               onClick={onBackToSite}
-              className={`hidden sm:flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+              className={`hidden items-center gap-1.5 text-xs font-semibold transition-colors sm:flex ${
                 isDark ? 'text-neutral-400 hover:text-white' : 'text-stone-600 hover:text-stone-900'
               }`}
             >
@@ -533,20 +566,30 @@ function Dashboard({
                         </td>
                         <td className="hidden px-5 py-4 md:table-cell">
                           <span
-                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                            className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${
                               isDark
-                                ? 'bg-red-950/80 text-red-400 border-red-800/40'
-                                : 'bg-red-50 text-red-700 border-red-200'
+                                ? 'border-red-800/40 bg-red-950/80 text-red-400'
+                                : 'border-red-200 bg-red-50 text-red-700'
                             }`}
                           >
                             {article.categorie}
                           </span>
                         </td>
-                        <td className={`hidden px-5 py-4 text-xs lg:table-cell ${isDark ? 'text-neutral-400' : 'text-stone-500'}`}>
+                        <td
+                          className={`hidden px-5 py-4 text-xs lg:table-cell ${
+                            isDark ? 'text-neutral-400' : 'text-stone-500'
+                          }`}
+                        >
                           {article.auteur || '—'}
                         </td>
-                        <td className={`hidden px-5 py-4 text-xs lg:table-cell ${isDark ? 'text-neutral-500' : 'text-stone-400'}`}>
-                          {article.created_at ? new Date(article.created_at).toLocaleDateString('fr-FR') : '—'}
+                        <td
+                          className={`hidden px-5 py-4 text-xs lg:table-cell ${
+                            isDark ? 'text-neutral-500' : 'text-stone-400'
+                          }`}
+                        >
+                          {article.created_at
+                            ? new Date(article.created_at).toLocaleDateString('fr-FR')
+                            : '—'}
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-2">
@@ -581,6 +624,7 @@ function Dashboard({
           </>
         )}
 
+        {/* FORM VIEW WITH REACT-QUILL EDITOR */}
         {view === 'form' && (
           <div className="mx-auto max-w-3xl">
             <div className="mb-6 flex items-center justify-between">
@@ -590,22 +634,23 @@ function Dashboard({
             </div>
 
             {submitStatus === 'success' && (
-              <div className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-950/80 border border-emerald-800 p-4 text-xs font-bold text-emerald-300">
+              <div className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-800 bg-emerald-950/80 p-4 text-xs font-bold text-emerald-300">
                 <CheckCircle2 size={18} /> {submitMessage}
               </div>
             )}
             {submitStatus === 'error' && (
-              <div className="mb-6 flex items-center gap-2 rounded-xl bg-red-950/80 border border-red-800 p-4 text-xs font-bold text-red-300">
+              <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-800 bg-red-950/80 p-4 text-xs font-bold text-red-300">
                 <AlertCircle size={18} /> {submitMessage}
               </div>
             )}
 
             <form
               onSubmit={handleSubmit}
-              className={`space-y-6 rounded-2xl border p-6 shadow-2xl sm:p-8 transition-colors ${
+              className={`space-y-6 rounded-2xl border p-6 shadow-2xl transition-colors sm:p-8 ${
                 isDark ? 'border-neutral-800 bg-neutral-900' : 'border-stone-200 bg-white'
               }`}
             >
+              {/* Titre */}
               <div>
                 <label
                   className={`mb-2 block text-[11px] font-bold uppercase tracking-wider ${
@@ -624,6 +669,7 @@ function Dashboard({
                 />
               </div>
 
+              {/* Rubrique + Auteur */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label
@@ -661,6 +707,7 @@ function Dashboard({
                 </div>
               </div>
 
+              {/* Image d'illustration */}
               <div>
                 <label
                   className={`mb-2 block text-[11px] font-bold uppercase tracking-wider ${
@@ -685,11 +732,20 @@ function Dashboard({
                       </>
                     ) : (
                       <>
-                        <Upload size={24} className={isDark ? 'text-neutral-500' : 'text-stone-400'} />
-                        <span className={`text-xs font-semibold ${isDark ? 'text-neutral-300' : 'text-stone-700'}`}>
+                        <Upload
+                          size={24}
+                          className={isDark ? 'text-neutral-500' : 'text-stone-400'}
+                        />
+                        <span
+                          className={`text-xs font-semibold ${
+                            isDark ? 'text-neutral-300' : 'text-stone-700'
+                          }`}
+                        >
                           Cliquez pour importer une image depuis votre ordinateur
                         </span>
-                        <span className="text-[10px] text-neutral-500">PNG, JPG, WebP — max 5 Mo</span>
+                        <span className="text-[10px] text-neutral-500">
+                          PNG, JPG, WebP — max 5 Mo
+                        </span>
                       </>
                     )}
                     <input
@@ -727,7 +783,7 @@ function Dashboard({
                     <button
                       type="button"
                       onClick={() => setForm((prev) => ({ ...prev, image_url: '' }))}
-                      className="absolute right-3 top-3 rounded-lg bg-black/80 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-md hover:bg-red-600 transition-colors"
+                      className="absolute right-3 top-3 rounded-lg bg-black/80 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-md transition-colors hover:bg-red-600"
                     >
                       <X size={14} />
                     </button>
@@ -735,6 +791,7 @@ function Dashboard({
                 )}
               </div>
 
+              {/* Chapô */}
               <div>
                 <label
                   className={`mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider ${
@@ -755,24 +812,62 @@ function Dashboard({
                 />
               </div>
 
+              {/* Contenu avec ÉDITEUR ENRICHI REACT-QUILL */}
               <div>
                 <label
                   className={`mb-2 block text-[11px] font-bold uppercase tracking-wider ${
                     isDark ? 'text-neutral-400' : 'text-stone-600'
                   }`}
                 >
-                  Corps de l'article
+                  Corps de l'article (Éditeur Enrichi)
                 </label>
-                <textarea
-                  required
-                  rows={10}
-                  value={form.contenu}
-                  onChange={(e) => setForm({ ...form, contenu: e.target.value })}
-                  className={`${inputClass} resize-y leading-relaxed`}
-                  placeholder="Développez votre article ici…"
-                />
+                <div
+                  className={`quill-wrapper overflow-hidden rounded-xl border transition-all ${
+                    isDark
+                      ? 'border-neutral-800 bg-neutral-950 text-white'
+                      : 'border-stone-300 bg-white text-stone-900'
+                  }`}
+                >
+                  <ReactQuill
+                    theme="snow"
+                    value={form.contenu}
+                    onChange={(value) => setForm({ ...form, contenu: value })}
+                    modules={quillModules}
+                    placeholder="Rédigez votre article, mettez en gras, ajustez l'alignement (justifié, centré)..."
+                  />
+                </div>
               </div>
 
+              {/* Styles Personnalisés pour l'Éditeur */}
+              <style>{`
+                .quill-wrapper .ql-toolbar {
+                  border: none !important;
+                  border-bottom: 1px solid ${isDark ? '#262626' : '#e7e5e4'} !important;
+                  background-color: ${isDark ? '#171717' : '#f5f5f4'} !important;
+                }
+                .quill-wrapper .ql-container {
+                  border: none !important;
+                  min-height: 250px;
+                  font-size: 15px;
+                }
+                .quill-wrapper .ql-editor {
+                  min-height: 250px;
+                  color: ${isDark ? '#f5f5f5' : '#1c1917'};
+                }
+                .quill-wrapper .ql-editor.ql-blank::before {
+                  color: ${isDark ? '#737373' : '#a8a29e'};
+                }
+                ${
+                  isDark
+                    ? `.quill-wrapper .ql-stroke { stroke: #d4d4d4 !important; }
+                       .quill-wrapper .ql-fill { fill: #d4d4d4 !important; }
+                       .quill-wrapper .ql-picker { color: #d4d4d4 !important; }
+                       .quill-wrapper .ql-picker-options { background-color: #171717 !important; border-color: #262626 !important; }`
+                    : ''
+                }
+              `}</style>
+
+              {/* Actions */}
               <div
                 className={`flex items-center justify-end gap-3 border-t pt-6 ${
                   isDark ? 'border-neutral-800' : 'border-stone-200'
