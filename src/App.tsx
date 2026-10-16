@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import type { Article } from '@/types/article';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { ArticleCard } from '@/components/ArticleCard';
-import { AdminPage } from '@/pages/AdminPage';
-import { Loader2 } from 'lucide-react';
+import { supabase } from './lib/supabase';
+import type { Article } from './types/article';
+import { Header } from './components/Header';
+import { Footer } from './components/Footer';
+import { ArticleCard } from './components/ArticleCard';
+import { AdminPage } from './pages/AdminPage';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'admin'>('home');
@@ -15,13 +14,17 @@ export default function App() {
 
   const fetchArticles = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('articles')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      setArticles(data as Article[]);
+      if (!error && data) {
+        setArticles(data as Article[]);
+      }
+    } catch (e) {
+      console.error(e);
     }
     setLoading(false);
   };
@@ -65,7 +68,6 @@ export default function App() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 text-stone-500">
-              <Loader2 className="mb-4 animate-spin text-red-900" size={32} />
               <p className="text-sm font-medium">Chargement des éditions…</p>
             </div>
           ) : articles.length === 0 ? (
