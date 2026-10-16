@@ -29,6 +29,7 @@ interface AdminPageProps {
 const EMPTY_FORM = {
   titre: '',
   categorie: '',
+  chapeau: '',
   auteur: '',
   image_url: '',
   contenu: '',
@@ -153,7 +154,7 @@ function Dashboard({
     fetchArticles();
   }, [fetchArticles]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     if (!confirm('Supprimer cet article définitivement ?')) return;
 
     const { error: deleteError } = await supabase.from('articles').delete().eq('id', id);
@@ -165,12 +166,12 @@ function Dashboard({
     setArticles((prev) => prev.filter((a) => a.id !== id));
   };
 
-  // SÉCURISÉ : Gestion des champs pouvant être null
   const handleEdit = (article: Article) => {
     setEditingArticle(article);
     setForm({
       titre: article.titre ?? '',
       categorie: article.categorie ?? '',
+      chapeau: article.chapeau ?? '',
       auteur: article.auteur ?? '',
       image_url: article.image_url ?? '',
       contenu: article.contenu ?? '',
@@ -247,6 +248,7 @@ function Dashboard({
     const payload = {
       titre: form.titre,
       categorie: form.categorie,
+      chapeau: form.chapeau,
       auteur: form.auteur,
       image_url: form.image_url,
       contenu: form.contenu,
@@ -456,6 +458,7 @@ function Dashboard({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6 rounded-sm border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+              {/* Titre */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
                   Titre
@@ -470,6 +473,7 @@ function Dashboard({
                 />
               </div>
 
+              {/* Catégorie + Auteur */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
@@ -499,6 +503,7 @@ function Dashboard({
                 </div>
               </div>
 
+              {/* Image de l'article */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
                   Image de l'article
@@ -578,6 +583,21 @@ function Dashboard({
                 )}
               </div>
 
+              {/* Chapeau */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
+                  Chapeau (Résumé / Accroche)
+                </label>
+                <textarea
+                  rows={3}
+                  value={form.chapeau}
+                  onChange={(e) => setForm({ ...form, chapeau: e.target.value })}
+                  className={`${inputClass} resize-y italic`}
+                  placeholder="Court résumé d'accroche qui apparaît au début de l'article…"
+                />
+              </div>
+
+              {/* Contenu */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
                   Contenu
@@ -592,6 +612,7 @@ function Dashboard({
                 />
               </div>
 
+              {/* Boutons d'action */}
               <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-6">
                 <button
                   type="button"
