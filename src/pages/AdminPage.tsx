@@ -165,16 +165,18 @@ function Dashboard({
     setArticles((prev) => prev.filter((a) => a.id !== id));
   };
 
+  // SÉCURISÉ : Gestion des champs pouvant être null
   const handleEdit = (article: Article) => {
     setEditingArticle(article);
     setForm({
-      titre: article.titre,
-      categorie: article.categorie,
-      auteur: article.auteur,
-      image_url: article.image_url,
-      contenu: article.contenu,
+      titre: article.titre ?? '',
+      categorie: article.categorie ?? '',
+      auteur: article.auteur ?? '',
+      image_url: article.image_url ?? '',
+      contenu: article.contenu ?? '',
     });
     setSubmitStatus('idle');
+    setSubmitMessage('');
     setUploadError(null);
     setView('form');
   };
@@ -183,6 +185,7 @@ function Dashboard({
     setEditingArticle(null);
     setForm(EMPTY_FORM);
     setSubmitStatus('idle');
+    setSubmitMessage('');
     setUploadError(null);
     setView('form');
   };
@@ -192,7 +195,6 @@ function Dashboard({
     setUploadError(null);
 
     try {
-      // Try Supabase Storage first
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
@@ -202,20 +204,17 @@ function Dashboard({
         .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
       if (uploadError) {
-        // Storage bucket not available — fall back to base64
         const dataUrl = await fileToBase64(file);
         setForm((prev) => ({ ...prev, image_url: dataUrl }));
         setUploadError(null);
       } else {
-        // Get public URL
         const { data: urlData } = supabase.storage
           .from(BUCKET_NAME)
           .getPublicUrl(filePath);
 
         setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
       }
-    } catch (err) {
-      // Last resort fallback: base64
+    } catch {
       try {
         const dataUrl = await fileToBase64(file);
         setForm((prev) => ({ ...prev, image_url: dataUrl }));
@@ -254,7 +253,7 @@ function Dashboard({
     };
 
     if (editingArticle) {
-      // Update existing article
+      // Modification
       const { error: updateError } = await supabase
         .from('articles')
         .update(payload)
@@ -269,7 +268,7 @@ function Dashboard({
       setSubmitStatus('success');
       setSubmitMessage('Article mis à jour avec succès !');
     } else {
-      // Create new article
+      // Création
       const { error: insertError } = await supabase
         .from('articles')
         .insert([payload]);
@@ -284,14 +283,10 @@ function Dashboard({
       setSubmitMessage('Article publié avec succès !');
     }
 
-    // Reset form
     setForm(EMPTY_FORM);
     setEditingArticle(null);
-
-    // Refresh article list
     fetchArticles();
 
-    // Auto-switch to list after 1.5s
     setTimeout(() => {
       setView('list');
       setSubmitStatus('idle');
@@ -412,10 +407,10 @@ function Dashboard({
                           </span>
                         </td>
                         <td className="hidden px-4 py-3 text-neutral-600 lg:table-cell">
-                          {article.auteur}
+                          {article.auteur || '—'}
                         </td>
                         <td className="hidden px-4 py-3 text-neutral-500 lg:table-cell">
-                          {new Date(article.created_at).toLocaleDateString('fr-FR')}
+                          {article.created_at ? new Date(article.created_at).toLocaleDateString('fr-FR') : '—'}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-2">
@@ -442,14 +437,13 @@ function Dashboard({
           </>
         )}
 
-        {/* ===== FORM VIEW (create / edit) ===== */}
+        {/* ===== FORM VIEW ===== */}
         {view === 'form' && (
           <div className="mx-auto max-w-3xl">
             <h2 className="mb-6 font-serif text-2xl font-black text-neutral-900">
               {editingArticle ? "Modifier l'article" : 'Rédiger un nouvel article'}
             </h2>
 
-            {/* Status messages */}
             {submitStatus === 'success' && (
               <div className="mb-6 flex items-center gap-2 rounded-sm border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
                 <CheckCircle2 size={18} /> {submitMessage}
@@ -462,7 +456,6 @@ function Dashboard({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6 rounded-sm border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
-              {/* Titre */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
                   Titre
@@ -477,7 +470,6 @@ function Dashboard({
                 />
               </div>
 
-              {/* Catégorie + Auteur */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
@@ -489,7 +481,7 @@ function Dashboard({
                     value={form.categorie}
                     onChange={(e) => setForm({ ...form, categorie: e.target.value })}
                     className={inputClass}
-                    placeholder="ex: Politique, Culture, International…"
+                    placeholder="ex: Politique, Culture…"
                   />
                 </div>
                 <div>
@@ -507,17 +499,13 @@ function Dashboard({
                 </div>
               </div>
 
-              {/* Image: file upload + URL */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
                   Image de l'article
                 </label>
 
-                {/* File upload zone */}
                 <div className="mb-3">
-                  <label
-                    className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-sm border-2 border-dashed border-neutral-300 bg-neutral-50 px-4 py-6 text-center transition-colors hover:border-red-600 hover:bg-red-50/30"
-                  >
+                  <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-sm border-2 border-dashed border-neutral-300 bg-neutral-50 px-4 py-6 text-center transition-colors hover:border-red-600 hover:bg-red-50/30">
                     {uploading ? (
                       <>
                         <Loader2 size={24} className="animate-spin text-red-700" />
@@ -548,14 +536,12 @@ function Dashboard({
                   )}
                 </div>
 
-                {/* Divider */}
                 <div className="my-3 flex items-center gap-3">
                   <div className="h-px flex-1 bg-neutral-200" />
                   <span className="text-xs uppercase tracking-wider text-neutral-400">ou par URL</span>
                   <div className="h-px flex-1 bg-neutral-200" />
                 </div>
 
-                {/* URL input */}
                 <div className="relative">
                   <input
                     type="url"
@@ -566,7 +552,6 @@ function Dashboard({
                   />
                 </div>
 
-                {/* Image preview */}
                 {form.image_url && (
                   <div className="relative mt-3 overflow-hidden rounded-sm border border-neutral-200">
                     <img
@@ -593,7 +578,6 @@ function Dashboard({
                 )}
               </div>
 
-              {/* Contenu */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
                   Contenu
@@ -606,12 +590,8 @@ function Dashboard({
                   className={`${inputClass} resize-y font-body leading-relaxed`}
                   placeholder="Rédigez votre article ici…"
                 />
-                <p className="mt-1.5 text-xs text-neutral-400">
-                  Astuce : séparez les paragraphes par des sauts de ligne.
-                </p>
               </div>
 
-              {/* Submit */}
               <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-6">
                 <button
                   type="button"
