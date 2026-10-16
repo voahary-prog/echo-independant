@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Mail, ShieldCheck, Info } from 'lucide-react';
+import { X, Lock } from 'lucide-react';
 
 interface FooterProps {
   categories?: string[];
@@ -13,6 +13,8 @@ const DEFAULT_RUBRIQUES = [
   'CULTURE',
   'INTERNATIONAL',
   'SOCIÉTÉ',
+  'SPORT',
+  'PEOPLE',
 ];
 
 export function Footer({
@@ -31,13 +33,14 @@ export function Footer({
 
   return (
     <>
-      <footer className="mt-20 border-t border-neutral-200 bg-neutral-950 text-neutral-400">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
-            {/* Logo + Description */}
-            <div className="md:col-span-5">
+      <footer className="mt-20 border-t border-neutral-800 bg-neutral-950 text-neutral-400">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-12 items-start">
+            
+            {/* Colonne 1 : Logo + Description */}
+            <div className="md:col-span-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-lg font-black text-white">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-lg font-black text-white shadow-md shadow-red-600/30">
                   É
                 </span>
                 <span className="text-xl font-black tracking-tight text-white">
@@ -49,12 +52,12 @@ export function Footer({
               </p>
             </div>
 
-            {/* Rubriques */}
-            <div className="md:col-span-4">
-              <h4 className="text-xs font-extrabold uppercase tracking-widest text-white">
+            {/* Colonne 2 : Rubriques alignées sur la même rangée */}
+            <div className="md:col-span-5">
+              <h4 className="text-xs font-extrabold uppercase tracking-widest text-white mb-4">
                 Rubriques
               </h4>
-              <ul className="mt-4 grid grid-cols-2 gap-2 text-xs font-medium">
+              <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-xs font-semibold uppercase tracking-wider">
                 {allRubriques.map((cat) => (
                   <li key={cat}>
                     <button
@@ -63,7 +66,7 @@ export function Footer({
                         if (onCategoryClick) onCategoryClick(cat);
                         window.scrollTo(0, 0);
                       }}
-                      className="transition-colors hover:text-white hover:underline"
+                      className="transition-colors hover:text-red-500"
                     >
                       {cat}
                     </button>
@@ -72,61 +75,68 @@ export function Footer({
               </ul>
             </div>
 
-            {/* Navigation institutionnelle */}
-            <div className="md:col-span-3">
-              <h4 className="text-xs font-extrabold uppercase tracking-widest text-white">
-                Informations
-              </h4>
-              <ul className="mt-4 space-y-2.5 text-xs font-medium">
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal('about')}
-                    className="transition-colors hover:text-white"
-                  >
-                    Qui sommes-nous
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal('legal')}
-                    className="transition-colors hover:text-white"
-                  >
-                    Mentions légales
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal('contact')}
-                    className="transition-colors hover:text-white"
-                  >
-                    Contact
-                  </button>
-                </li>
-                <li className="pt-3">
-                  <button
-                    type="button"
-                    onClick={onAdminClick}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 border border-neutral-800 px-3 py-2 text-[11px] font-bold text-red-400 transition-colors hover:border-red-500/50 hover:text-red-300"
-                  >
-                    ⚙ Espace Rédaction
-                  </button>
-                </li>
-              </ul>
+            {/* Colonne 3 : Informations & Espace Rédaction discret à droite */}
+            <div className="md:col-span-3 flex flex-col justify-between h-full">
+              <div>
+                <h4 className="text-xs font-extrabold uppercase tracking-widest text-white mb-4">
+                  Informations
+                </h4>
+                <ul className="space-y-2.5 text-xs font-medium">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setActiveModal('about')}
+                      className="transition-colors hover:text-white"
+                    >
+                      Qui sommes-nous
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setActiveModal('legal')}
+                      className="transition-colors hover:text-white"
+                    >
+                      Mentions légales
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setActiveModal('contact')}
+                      className="transition-colors hover:text-white"
+                    >
+                      Contact
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Bouton Espace Rédaction discret */}
+              <div className="mt-6 pt-4 border-t border-neutral-900">
+                <button
+                  type="button"
+                  onClick={onAdminClick}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-medium text-neutral-500 hover:text-neutral-300 transition-colors"
+                >
+                  <Lock size={12} className="text-neutral-500" />
+                  <span>Espace Rédaction</span>
+                </button>
+              </div>
             </div>
+
           </div>
 
+          {/* Copyright */}
           <div className="mt-12 border-t border-neutral-900 pt-6 text-center text-[11px] text-neutral-600">
             © {new Date().getFullYear()} L'Écho Indépendant. Tous droits réservés.
           </div>
         </div>
       </footer>
 
-      {/* Pop-up Modale Moderne */}
+      {/* Pop-up Modales */}
       {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
           <div className="relative w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-white shadow-2xl sm:p-8">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
               <h3 className="text-lg font-bold">
