@@ -5,6 +5,14 @@ interface HeaderProps {
   onHomeClick?: () => void;
 }
 
+const DEFAULT_RUBRIQUES = [
+  'Politique',
+  'Économie',
+  'Culture',
+  'International',
+  'Société',
+];
+
 export function Header({
   categories = [],
   selectedCategory,
@@ -18,6 +26,11 @@ export function Header({
     day: 'numeric',
   });
 
+  // Combiner les rubriques par défaut avec celles présentes en base de données
+  const allRubriques = Array.from(
+    new Set([...DEFAULT_RUBRIQUES, ...categories])
+  );
+
   return (
     <header className="border-b border-stone-300 bg-white">
       {/* Top Bar avec date */}
@@ -28,11 +41,12 @@ export function Header({
       {/* Titre du journal */}
       <div className="mx-auto max-w-7xl px-4 py-8 text-center sm:px-6 lg:px-8">
         <button
+          type="button"
           onClick={() => {
             if (onSelectCategory) onSelectCategory(null);
             if (onHomeClick) onHomeClick();
           }}
-          className="text-left font-serif transition-opacity hover:opacity-80"
+          className="text-center font-serif transition-opacity hover:opacity-80"
         >
           <h1 className="font-serif text-4xl font-black tracking-tight text-stone-900 sm:text-6xl md:text-7xl">
             L'Écho Indépendant
@@ -61,8 +75,8 @@ export function Header({
             Une
           </button>
 
-          {/* Liste dynamique des catégories */}
-          {categories.map((cat) => (
+          {/* Liste complète des rubriques */}
+          {allRubriques.map((cat) => (
             <button
               key={cat}
               type="button"
