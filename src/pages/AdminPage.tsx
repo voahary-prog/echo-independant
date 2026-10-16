@@ -792,25 +792,25 @@ function Dashboard({
               </div>
 
               {/* Chapô */}
-              <div>
-                <label
-                  className={`mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider ${
-                    isDark ? 'text-neutral-400' : 'text-stone-600'
-                  }`}
-                >
-                  <span>Chapô (Résumé / Accroche)</span>
-                  <span className="flex items-center gap-1 text-[10px] text-red-500">
-                    <Sparkles size={12} /> Essentiel pour la Une
-                  </span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={form.chapo}
-                  onChange={(e) => setForm({ ...form, chapo: e.target.value })}
-                  className={`${inputClass} resize-y italic`}
-                  placeholder="Résumé percutant qui introduit le corps de votre article…"
-                />
-              </div>
+<div>
+  <label
+    className={`mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider ${
+      isDark ? 'text-neutral-400' : 'text-stone-600'
+    }`}
+  >
+    <span>Chapô (Résumé / Accroche)</span>
+    <span className="flex items-center gap-1 text-[10px] text-red-500">
+      <Sparkles size={12} /> Essentiel pour la Une
+    </span>
+  </label>
+  <textarea
+    rows={4}
+    value={form.chapo}
+    onChange={(e) => setForm({ ...form, chapo: e.target.value })}
+    className={`${inputClass} resize-y italic text-justify`}
+    placeholder="Résumé percutant qui introduit le corps de votre article…"
+  />
+</div>
 
               {/* Contenu avec ÉDITEUR ENRICHI REACT-QUILL */}
               <div>
