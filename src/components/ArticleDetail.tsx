@@ -36,11 +36,11 @@ export function ArticleDetail({
         </h1>
 
         {/* Chapô */}
-        {article.chapo && (
-          <p className="mt-6 font-serif text-lg font-medium italic leading-relaxed text-stone-700 sm:text-xl">
-            {article.chapo}
-          </p>
-        )}
+{article.chapo && (
+  <p className="mt-6 text-justify font-serif text-lg font-medium italic leading-relaxed text-stone-700 sm:text-xl">
+    {article.chapo}
+  </p>
+)}
 
         {/* Métadonnées */}
         <div className="mt-6 flex flex-wrap items-center gap-4 border-y border-stone-200 py-3 text-xs text-stone-600">
