@@ -11,6 +11,8 @@ const DEFAULT_RUBRIQUES = [
   'CULTURE',
   'INTERNATIONAL',
   'SOCIÉTÉ',
+  'SPORT',
+  'PEOPLE',
 ];
 
 export function Header({
