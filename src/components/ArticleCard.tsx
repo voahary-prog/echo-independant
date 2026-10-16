@@ -40,10 +40,10 @@ export function ArticleCard({ article, onClick, featured }: ArticleCardProps) {
               </h2>
 
               {article.chapo && (
-                <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-neutral-300">
-                  {article.chapo}
-                </p>
-              )}
+  <p className="mt-4 line-clamp-3 text-justify text-sm leading-relaxed text-neutral-300">
+    {article.chapo}
+  </p>
+)}
             </div>
 
             <div className="mt-8 flex items-center justify-between border-t border-neutral-800 pt-4 text-xs text-neutral-400">
