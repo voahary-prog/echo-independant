@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
-import type { Article } from './types/article';
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
-import { ArticleCard } from './components/ArticleCard';
-import { AdminPage } from './pages/AdminPage';
+import { supabase } from '@/lib/supabase';
+import type { Article } from '@/types/article';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { ArticleCard } from '@/components/ArticleCard';
+import { AdminPage } from '@/pages/AdminPage';
+import { Loader2 } from 'lucide-react';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'admin'>('home');
@@ -21,10 +22,10 @@ export default function App() {
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        setArticles(data as Article[]);
+        setArticles((data as Article[]) ?? []);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
     setLoading(false);
   };
@@ -49,6 +50,11 @@ export default function App() {
     );
   }
 
+  // Extraire les catégories uniques depuis les articles
+  const categories = Array.from(
+    new Set(articles.map((a) => a.categorie).filter(Boolean))
+  );
+
   const filteredArticles = selectedCategory
     ? articles.filter((a) => a.categorie?.toLowerCase() === selectedCategory.toLowerCase())
     : articles;
@@ -59,6 +65,7 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col bg-stone-50 font-sans text-stone-900">
       <Header
+        categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
         onHomeClick={handleBackToHome}
@@ -68,6 +75,7 @@ export default function App() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 text-stone-500">
+              <Loader2 className="mb-4 animate-spin text-red-900" size={32} />
               <p className="text-sm font-medium">Chargement des éditions…</p>
             </div>
           ) : articles.length === 0 ? (
@@ -111,6 +119,7 @@ export default function App() {
       </main>
 
       <Footer
+        categories={categories}
         onAdminClick={() => setCurrentView('admin')}
         onCategoryClick={(cat) => {
           setSelectedCategory(cat);
