@@ -26,44 +26,53 @@ export function Header({
     day: 'numeric',
   });
 
-  // Convertir toutes les catégories saisies en majuscules pour éviter les doublons
   const formattedCategories = categories.map((c) => c.toUpperCase());
-
-  // Fusionner et dédupliquer
   const allRubriques = Array.from(
     new Set([...DEFAULT_RUBRIQUES, ...formattedCategories])
   );
 
   return (
-    <header className="border-b border-stone-300 bg-white">
-      {/* Top Bar avec date */}
-      <div className="border-b border-stone-200 py-2 text-center text-xs text-stone-500 capitalize">
-        {currentDate} — Édition numérique
+    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/80 backdrop-blur-md">
+      {/* Top Bar minimale */}
+      <div className="border-b border-neutral-100 bg-neutral-900 text-neutral-400 py-1.5 px-4 text-[11px] font-medium tracking-wide">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <span className="capitalize">{currentDate}</span>
+          <span className="flex items-center gap-2 text-neutral-300">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            Édition Direct
+          </span>
+        </div>
       </div>
 
-      {/* Titre du journal */}
-      <div className="mx-auto max-w-7xl px-4 py-8 text-center sm:px-6 lg:px-8">
+      {/* Hero Header */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
         <button
           type="button"
           onClick={() => {
             if (onSelectCategory) onSelectCategory(null);
             if (onHomeClick) onHomeClick();
           }}
-          className="text-center font-serif transition-opacity hover:opacity-80"
+          className="group text-left"
         >
-          <h1 className="font-serif text-4xl font-black tracking-tight text-stone-900 sm:text-6xl md:text-7xl">
-            L'Écho Indépendant
-          </h1>
-          <p className="mt-2 text-xs uppercase tracking-widest text-stone-500">
-            Indépendance — Rigueur — Vérité
-          </p>
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-xl font-black text-white shadow-lg shadow-red-600/30 transition-transform group-hover:scale-105">
+              É
+            </span>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
+                L'ÉCHO <span className="text-red-600">INDÉPENDANT</span>
+              </h1>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                Le média d'actualité en continu
+              </p>
+            </div>
+          </div>
         </button>
       </div>
 
-      {/* Barre de navigation / Rubriques en MAJUSCULES */}
-      <nav className="border-t border-stone-900 bg-stone-900 text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-6 overflow-x-auto px-4 py-3 text-xs font-bold uppercase tracking-widest sm:gap-8">
-          {/* Bouton UNE */}
+      {/* Navigation Rubriques */}
+      <nav className="border-t border-neutral-100 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 py-2 text-xs font-bold tracking-wider">
           <button
             type="button"
             onClick={(e) => {
@@ -71,14 +80,15 @@ export function Header({
               if (onSelectCategory) onSelectCategory(null);
               if (onHomeClick) onHomeClick();
             }}
-            className={`transition-colors hover:text-red-400 ${
-              !selectedCategory ? 'text-red-500 underline underline-offset-4' : 'text-stone-300'
+            className={`rounded-lg px-4 py-2 transition-all ${
+              !selectedCategory
+                ? 'bg-neutral-900 text-white shadow-md'
+                : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
             }`}
           >
-            UNE
+            🔥 À LA UNE
           </button>
 
-          {/* Liste nettoyée des rubriques en majuscules */}
           {allRubriques.map((cat) => (
             <button
               key={cat}
@@ -87,10 +97,10 @@ export function Header({
                 e.preventDefault();
                 if (onSelectCategory) onSelectCategory(cat);
               }}
-              className={`transition-colors hover:text-red-400 ${
+              className={`rounded-lg px-4 py-2 transition-all whitespace-nowrap ${
                 selectedCategory?.toUpperCase() === cat
-                  ? 'text-red-500 underline underline-offset-4'
-                  : 'text-stone-300'
+                  ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                  : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
               }`}
             >
               {cat}
