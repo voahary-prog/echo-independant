@@ -13,7 +13,8 @@ import {
   Pencil,
   Upload,
   X,
-  Image as ImageIcon,
+  ImageIcon,
+  Sparkles,
 } from 'lucide-react';
 import type { Article } from '@/types/article';
 import { supabase } from '@/lib/supabase';
@@ -61,18 +62,19 @@ export function AdminPage({ onBackToSite }: AdminPageProps) {
 
   if (!authed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-900 px-4">
-        <div className="w-full max-w-sm">
+      <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 font-sans text-white">
+        <div className="w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900/90 p-8 shadow-2xl backdrop-blur-xl">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-800">
-              <Lock className="text-white" size={24} />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-600 text-white shadow-lg shadow-red-600/30">
+              <Lock size={22} />
             </div>
-            <h1 className="font-serif text-2xl font-black text-white">Espace Rédaction</h1>
-            <p className="mt-2 text-sm text-neutral-400">L'Écho Indépendant — Administration</p>
+            <h1 className="text-xl font-black tracking-tight text-white">ESPACE RÉDACTION</h1>
+            <p className="mt-1 text-xs text-neutral-400">L'Écho Indépendant — Administration</p>
           </div>
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-400">
+              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-neutral-400">
                 Mot de passe
               </label>
               <input
@@ -82,26 +84,27 @@ export function AdminPage({ onBackToSite }: AdminPageProps) {
                   setPassword(e.target.value);
                   setLoginError(false);
                 }}
-                className="w-full rounded-sm border border-neutral-700 bg-neutral-800 px-4 py-3 text-white placeholder-neutral-500 outline-none transition-colors focus:border-red-600"
+                className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 text-sm text-white placeholder-neutral-600 outline-none transition-colors focus:border-red-600 focus:ring-1 focus:ring-red-600"
                 placeholder="••••••••••••"
                 autoFocus
               />
               {loginError && (
-                <p className="mt-2 flex items-center gap-1.5 text-sm text-red-400">
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-red-400">
                   <AlertCircle size={14} /> Mot de passe incorrect.
                 </p>
               )}
             </div>
             <button
               type="submit"
-              className="w-full rounded-sm bg-red-800 px-4 py-3 font-semibold text-white transition-colors hover:bg-red-700"
+              className="w-full rounded-xl bg-red-600 px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-red-600/30 transition-all hover:bg-red-500 hover:shadow-red-600/50"
             >
               Se connecter
             </button>
           </form>
+
           <button
             onClick={onBackToSite}
-            className="mt-6 block w-full text-center text-xs uppercase tracking-wider text-neutral-500 transition-colors hover:text-neutral-300"
+            className="mt-6 block w-full text-center text-xs font-semibold text-neutral-500 transition-colors hover:text-neutral-300"
           >
             ← Retour au site
           </button>
@@ -128,7 +131,6 @@ function Dashboard({
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
 
-  // Form state
   const [form, setForm] = useState(EMPTY_FORM);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -137,7 +139,7 @@ function Dashboard({
   const fetchArticles = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await supabase
+    const { data, fetchError } = await supabase
       .from('articles')
       .select('*')
       .order('created_at', { ascending: false });
@@ -198,46 +200,31 @@ function Dashboard({
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
       if (uploadError) {
         const dataUrl = await fileToBase64(file);
         setForm((prev) => ({ ...prev, image_url: dataUrl }));
-        setUploadError(null);
       } else {
         const { data: urlData } = supabase.storage
           .from(BUCKET_NAME)
-          .getPublicUrl(filePath);
+          .getPublicUrl(fileName);
 
         setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
       }
     } catch {
-      try {
-        const dataUrl = await fileToBase64(file);
-        setForm((prev) => ({ ...prev, image_url: dataUrl }));
-      } catch {
-        setUploadError("Impossible de charger l'image. Vérifiez le fichier.");
-      }
+      const dataUrl = await fileToBase64(file);
+      setForm((prev) => ({ ...prev, image_url: dataUrl }));
     }
     setUploading(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      handleFileUpload(file);
-    }
-  };
-
-  const handleClearImage = () => {
-    setForm((prev) => ({ ...prev, image_url: '' }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (file) handleFileUpload(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -247,7 +234,7 @@ function Dashboard({
 
     const payload = {
       titre: form.titre,
-      categorie: form.categorie,
+      categorie: form.categorie.toUpperCase(),
       chapo: form.chapo,
       auteur: form.auteur,
       image_url: form.image_url,
@@ -255,7 +242,6 @@ function Dashboard({
     };
 
     if (editingArticle) {
-      // Modification
       const { error: updateError } = await supabase
         .from('articles')
         .update(payload)
@@ -266,11 +252,9 @@ function Dashboard({
         setSubmitMessage(updateError.message);
         return;
       }
-
       setSubmitStatus('success');
       setSubmitMessage('Article mis à jour avec succès !');
     } else {
-      // Création
       const { error: insertError } = await supabase
         .from('articles')
         .insert([payload]);
@@ -280,7 +264,6 @@ function Dashboard({
         setSubmitMessage(insertError.message);
         return;
       }
-
       setSubmitStatus('success');
       setSubmitMessage('Article publié avec succès !');
     }
@@ -292,33 +275,39 @@ function Dashboard({
     setTimeout(() => {
       setView('list');
       setSubmitStatus('idle');
-    }, 1500);
+    }, 1200);
   };
 
   const inputClass =
-    'w-full rounded-sm border border-neutral-300 bg-white px-4 py-2.5 text-neutral-900 outline-none transition-colors focus:border-red-700 focus:ring-1 focus:ring-red-700';
+    'w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition-all focus:border-red-600 focus:ring-2 focus:ring-red-600/20';
 
   return (
-    <div className="min-h-screen bg-neutral-100">
-      {/* Admin top bar */}
-      <div className="border-b-2 border-neutral-900 bg-neutral-900 text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+    <div className="min-h-screen bg-neutral-950 font-sans text-neutral-100">
+      {/* Top Header Back-office */}
+      <div className="sticky top-0 z-30 border-b border-neutral-800 bg-neutral-900/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-3">
-            <span className="font-serif text-lg font-black">L'Écho Indépendant</span>
-            <span className="rounded-sm bg-red-800 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">
-              Admin
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-sm font-black text-white">
+              É
+            </span>
+            <span className="font-bold tracking-tight text-white">
+              L'ÉCHO <span className="text-red-500">INDÉPENDANT</span>
+            </span>
+            <span className="rounded-full bg-red-950/80 px-2.5 py-0.5 text-[10px] font-bold text-red-400 border border-red-800/50">
+              Studio Rédaction
             </span>
           </div>
+
           <div className="flex items-center gap-4">
             <button
               onClick={onBackToSite}
-              className="hidden items-center gap-1.5 text-sm text-neutral-300 transition-colors hover:text-white sm:flex"
+              className="flex items-center gap-1.5 text-xs font-semibold text-neutral-400 transition-colors hover:text-white"
             >
               <ExternalLink size={14} /> Voir le site
             </button>
             <button
               onClick={onLogout}
-              className="flex items-center gap-1.5 text-sm text-neutral-300 transition-colors hover:text-white"
+              className="flex items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-300 transition-colors hover:bg-neutral-700 hover:text-white"
             >
               <LogOut size={14} /> Déconnexion
             </button>
@@ -326,107 +315,103 @@ function Dashboard({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-neutral-300 bg-white">
-        <div className="mx-auto flex max-w-7xl gap-1 px-4">
-          <button
-            onClick={() => setView('list')}
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              view === 'list'
-                ? 'border-red-800 text-red-800'
-                : 'border-transparent text-neutral-500 hover:text-neutral-800'
-            }`}
-          >
-            <LayoutDashboard size={16} /> Tableau de bord
-          </button>
-          <button
-            onClick={handleCreate}
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              view === 'form' && !editingArticle
-                ? 'border-red-800 text-red-800'
-                : 'border-transparent text-neutral-500 hover:text-neutral-800'
-            }`}
-          >
-            <Plus size={16} /> Nouvel article
-          </button>
+      {/* Barre d'actions & Onglets */}
+      <div className="border-b border-neutral-800 bg-neutral-900/50">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setView('list')}
+              className={`flex items-center gap-2 border-b-2 px-5 py-3.5 text-xs font-bold transition-all ${
+                view === 'list'
+                  ? 'border-red-500 text-red-500'
+                  : 'border-transparent text-neutral-400 hover:text-white'
+              }`}
+            >
+              <LayoutDashboard size={16} /> TABLEAU DE BORD
+            </button>
+            <button
+              onClick={handleCreate}
+              className={`flex items-center gap-2 border-b-2 px-5 py-3.5 text-xs font-bold transition-all ${
+                view === 'form' && !editingArticle
+                  ? 'border-red-500 text-red-500'
+                  : 'border-transparent text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Plus size={16} /> NOUVEL ARTICLE
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8">
-        {/* ===== LIST VIEW ===== */}
+        {/* LIST VIEW */}
         {view === 'list' && (
           <>
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="font-serif text-2xl font-black text-neutral-900">
-                Tous les articles
-              </h2>
-              <span className="text-sm text-neutral-500">
+              <div>
+                <h2 className="text-xl font-black text-white">ARTICLES PUBLIÉS</h2>
+                <p className="text-xs text-neutral-400">Gérez le contenu en direct de votre journal</p>
+              </div>
+              <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-bold text-neutral-300">
                 {articles.length} article{articles.length > 1 ? 's' : ''}
               </span>
             </div>
 
             {loading && (
-              <div className="flex flex-col items-center justify-center py-16 text-neutral-500">
-                <Loader2 className="mb-3 animate-spin" size={28} />
-                <p className="text-sm">Chargement…</p>
+              <div className="flex flex-col items-center justify-center py-20 text-neutral-500">
+                <Loader2 className="mb-3 animate-spin text-red-500" size={30} />
+                <p className="text-xs font-medium">Chargement des articles…</p>
               </div>
             )}
 
-            {error && (
-              <div className="border-l-4 border-red-800 bg-red-50 px-6 py-4">
-                <p className="font-semibold text-red-900">Erreur</p>
-                <p className="mt-1 text-sm text-red-700">{error}</p>
+            {!loading && articles.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-neutral-800 py-20 text-center text-neutral-500">
+                <p className="text-sm">Aucun article publié. Cliquez sur « Nouvel article » pour rédiger.</p>
               </div>
             )}
 
-            {!loading && !error && articles.length === 0 && (
-              <div className="rounded-sm border border-dashed border-neutral-300 py-16 text-center text-neutral-400">
-                <p className="text-sm">Aucun article. Cliquez sur « Nouvel article » pour en publier un.</p>
-              </div>
-            )}
-
-            {!loading && !error && articles.length > 0 && (
-              <div className="overflow-hidden rounded-sm border border-neutral-200 bg-white shadow-sm">
+            {!loading && articles.length > 0 && (
+              <div className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/60 backdrop-blur-md shadow-xl">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wider text-neutral-500">
+                  <thead className="border-b border-neutral-800 bg-neutral-900 text-[11px] uppercase tracking-wider text-neutral-400">
                     <tr>
-                      <th className="px-4 py-3">Titre</th>
-                      <th className="hidden px-4 py-3 md:table-cell">Catégorie</th>
-                      <th className="hidden px-4 py-3 lg:table-cell">Auteur</th>
-                      <th className="hidden px-4 py-3 lg:table-cell">Date</th>
-                      <th className="px-4 py-3 text-right">Actions</th>
+                      <th className="px-5 py-4">Titre</th>
+                      <th className="hidden px-5 py-4 md:table-cell">Rubrique</th>
+                      <th className="hidden px-5 py-4 lg:table-cell">Auteur</th>
+                      <th className="hidden px-5 py-4 lg:table-cell">Date</th>
+                      <th className="px-5 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-100">
+                  <tbody className="divide-y divide-neutral-800/60">
                     {articles.map((article) => (
-                      <tr key={article.id} className="group transition-colors hover:bg-neutral-50">
-                        <td className="max-w-xs truncate px-4 py-3 font-medium text-neutral-900">
+                      <tr key={article.id} className="transition-colors hover:bg-neutral-800/40">
+                        <td className="max-w-xs truncate px-5 py-4 font-semibold text-white">
                           {article.titre}
                         </td>
-                        <td className="hidden px-4 py-3 md:table-cell">
-                          <span className="rounded-sm bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-800">
+                        <td className="hidden px-5 py-4 md:table-cell">
+                          <span className="rounded-full bg-red-950/80 px-2.5 py-0.5 text-[10px] font-bold text-red-400 border border-red-800/40">
                             {article.categorie}
                           </span>
                         </td>
-                        <td className="hidden px-4 py-3 text-neutral-600 lg:table-cell">
+                        <td className="hidden px-5 py-4 text-xs text-neutral-400 lg:table-cell">
                           {article.auteur || '—'}
                         </td>
-                        <td className="hidden px-4 py-3 text-neutral-500 lg:table-cell">
+                        <td className="hidden px-5 py-4 text-xs text-neutral-500 lg:table-cell">
                           {article.created_at ? new Date(article.created_at).toLocaleDateString('fr-FR') : '—'}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleEdit(article)}
-                              className="inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-50"
+                              className="inline-flex items-center gap-1 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-bold text-neutral-200 transition-colors hover:bg-neutral-700 hover:text-white"
                             >
-                              <Pencil size={14} /> Modifier
+                              <Pencil size={13} /> Éditer
                             </button>
                             <button
                               onClick={() => handleDelete(article.id)}
-                              className="inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50"
+                              className="inline-flex items-center gap-1 rounded-lg bg-red-950/50 px-3 py-1.5 text-xs font-bold text-red-400 transition-colors hover:bg-red-900/80 hover:text-white"
                             >
-                              <Trash2 size={14} /> Supprimer
+                              <Trash2 size={13} />
                             </button>
                           </div>
                         </td>
@@ -439,29 +424,31 @@ function Dashboard({
           </>
         )}
 
-        {/* ===== FORM VIEW ===== */}
+        {/* FORM VIEW (EDITION & CREATION) */}
         {view === 'form' && (
           <div className="mx-auto max-w-3xl">
-            <h2 className="mb-6 font-serif text-2xl font-black text-neutral-900">
-              {editingArticle ? "Modifier l'article" : 'Rédiger un nouvel article'}
-            </h2>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-black text-white">
+                {editingArticle ? "MODIFIER L'ARTICLE" : 'RÉDIGER UN ARTICLE'}
+              </h2>
+            </div>
 
             {submitStatus === 'success' && (
-              <div className="mb-6 flex items-center gap-2 rounded-sm border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
+              <div className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-950/80 border border-emerald-800 p-4 text-xs font-bold text-emerald-300">
                 <CheckCircle2 size={18} /> {submitMessage}
               </div>
             )}
             {submitStatus === 'error' && (
-              <div className="mb-6 flex items-center gap-2 rounded-sm border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+              <div className="mb-6 flex items-center gap-2 rounded-xl bg-red-950/80 border border-red-800 p-4 text-xs font-bold text-red-300">
                 <AlertCircle size={18} /> {submitMessage}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6 rounded-sm border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+            <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl sm:p-8">
               {/* Titre */}
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                  Titre
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  Titre de l'article
                 </label>
                 <input
                   type="text"
@@ -469,15 +456,15 @@ function Dashboard({
                   value={form.titre}
                   onChange={(e) => setForm({ ...form, titre: e.target.value })}
                   className={inputClass}
-                  placeholder="Titre de l'article"
+                  placeholder="ex: Titre captivant de votre actualité…"
                 />
               </div>
 
-              {/* Catégorie + Auteur */}
+              {/* Rubrique + Auteur */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                    Catégorie
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                    Rubrique
                   </label>
                   <input
                     type="text"
@@ -485,12 +472,12 @@ function Dashboard({
                     value={form.categorie}
                     onChange={(e) => setForm({ ...form, categorie: e.target.value })}
                     className={inputClass}
-                    placeholder="ex: Politique, Culture…"
+                    placeholder="POLITIQUE, ÉCONOMIE, CULTURE…"
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                    Auteur
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                    Auteur / Journaliste
                   </label>
                   <input
                     type="text"
@@ -505,24 +492,24 @@ function Dashboard({
 
               {/* Image de l'article */}
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                  Image de l'article
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  Image d'illustration
                 </label>
 
                 <div className="mb-3">
-                  <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-sm border-2 border-dashed border-neutral-300 bg-neutral-50 px-4 py-6 text-center transition-colors hover:border-red-600 hover:bg-red-50/30">
+                  <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-800 bg-neutral-950/50 p-6 text-center transition-all hover:border-red-600 hover:bg-red-950/10">
                     {uploading ? (
                       <>
-                        <Loader2 size={24} className="animate-spin text-red-700" />
-                        <span className="text-sm text-neutral-600">Téléversement en cours…</span>
+                        <Loader2 size={24} className="animate-spin text-red-500" />
+                        <span className="text-xs text-neutral-400">Téléversement en cours…</span>
                       </>
                     ) : (
                       <>
-                        <Upload size={24} className="text-neutral-400" />
-                        <span className="text-sm text-neutral-600">
+                        <Upload size={24} className="text-neutral-500" />
+                        <span className="text-xs font-semibold text-neutral-300">
                           Cliquez pour importer une image depuis votre ordinateur
                         </span>
-                        <span className="text-xs text-neutral-400">PNG, JPG, WebP — max 5 Mo</span>
+                        <span className="text-[10px] text-neutral-500">PNG, JPG, WebP — max 5 Mo</span>
                       </>
                     )}
                     <input
@@ -534,107 +521,89 @@ function Dashboard({
                       className="hidden"
                     />
                   </label>
-                  {uploadError && (
-                    <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">
-                      <AlertCircle size={14} /> {uploadError}
-                    </p>
-                  )}
                 </div>
 
-                <div className="my-3 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-neutral-200" />
-                  <span className="text-xs uppercase tracking-wider text-neutral-400">ou par URL</span>
-                  <div className="h-px flex-1 bg-neutral-200" />
-                </div>
-
-                <div className="relative">
+                <div className="relative my-3">
                   <input
                     type="url"
                     value={form.image_url.startsWith('data:') ? '' : form.image_url}
                     onChange={(e) => setForm({ ...form, image_url: e.target.value })}
                     className={inputClass}
-                    placeholder="https://exemple.com/image.jpg"
+                    placeholder="Ou collez l'URL d'une image (https://…)"
                   />
                 </div>
 
                 {form.image_url && (
-                  <div className="relative mt-3 overflow-hidden rounded-sm border border-neutral-200">
+                  <div className="relative mt-3 overflow-hidden rounded-xl border border-neutral-800">
                     <img
                       src={form.image_url}
                       alt="Aperçu"
-                      className="max-h-56 w-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
+                      className="max-h-52 w-full object-cover"
                     />
                     <button
                       type="button"
-                      onClick={handleClearImage}
-                      className="absolute right-2 top-2 flex items-center gap-1 rounded-sm bg-black/70 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-black/90"
+                      onClick={() => setForm((prev) => ({ ...prev, image_url: '' }))}
+                      className="absolute right-3 top-3 rounded-lg bg-black/80 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-md transition-colors hover:bg-red-600"
                     >
-                      <X size={12} /> Retirer
+                      <X size={14} />
                     </button>
-                    {form.image_url.startsWith('data:') && (
-                      <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-sm bg-black/70 px-2 py-1 text-xs text-white">
-                        <ImageIcon size={12} /> Image importée
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
 
               {/* Chapô */}
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                  Chapô (Résumé / Accroche)
+                <label className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  <span>Chapô (Résumé / Accroche)</span>
+                  <span className="flex items-center gap-1 text-[10px] text-red-400">
+                    <Sparkles size={12} /> Essentiel pour la Une
+                  </span>
                 </label>
                 <textarea
                   rows={3}
                   value={form.chapo}
                   onChange={(e) => setForm({ ...form, chapo: e.target.value })}
-                  className={`${inputClass} resize-y italic font-serif`}
-                  placeholder="Court résumé d'accroche qui précède le corps de l'article…"
+                  className={`${inputClass} resize-y italic`}
+                  placeholder="Résumé percutant qui introduit le corps de votre article…"
                 />
               </div>
 
               {/* Contenu */}
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                  Contenu
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  Corps de l'article
                 </label>
                 <textarea
                   required
-                  rows={12}
+                  rows={10}
                   value={form.contenu}
                   onChange={(e) => setForm({ ...form, contenu: e.target.value })}
-                  className={`${inputClass} resize-y font-body leading-relaxed`}
-                  placeholder="Rédigez votre article ici…"
+                  className={`${inputClass} resize-y leading-relaxed`}
+                  placeholder="Développez votre article ici…"
                 />
               </div>
 
-              {/* Boutons d'action */}
-              <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-6">
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 border-t border-neutral-800 pt-6">
                 <button
                   type="button"
                   onClick={() => setView('list')}
-                  className="rounded-sm px-5 py-2.5 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-100"
+                  className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={submitStatus === 'loading'}
-                  className="inline-flex items-center gap-2 rounded-sm bg-red-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-red-600/30 transition-all hover:bg-red-500 hover:shadow-red-600/50 disabled:opacity-50"
                 >
                   {submitStatus === 'loading' ? (
                     <>
-                      <Loader2 size={16} className="animate-spin" />
-                      {editingArticle ? 'Mise à jour…' : 'Publication…'}
+                      <Loader2 size={16} className="animate-spin" /> Publication…
                     </>
                   ) : (
                     <>
-                      <Send size={16} />
-                      {editingArticle ? 'Mettre à jour' : 'Publier'}
+                      <Send size={16} /> {editingArticle ? 'Mettre à jour' : 'Publier en direct'}
                     </>
                   )}
                 </button>
