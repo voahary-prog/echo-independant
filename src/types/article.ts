@@ -1,9 +1,9 @@
 export interface Article {
-  id: string;
+  id: string | number;
   titre: string;
   categorie: string;
   contenu: string;
-  auteur: string;
-  image_url: string;
-  created_at: string;
+  auteur?: string | null;
+  image_url?: string | null;
+  created_at?: string | null;
 }
