@@ -4,7 +4,7 @@ import type { Article } from '@/types/article';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ArticleCard } from '@/components/ArticleCard';
-import { ArticleDetail } from '@/components/ArticleDetail';
+import { ArticleDetail } from '@/components/ArticleDetail.tsx';
 import { AdminPage } from '@/pages/AdminPage';
 import { Loader2 } from 'lucide-react';
 
